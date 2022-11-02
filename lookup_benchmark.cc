@@ -210,7 +210,9 @@ int main(int argc, char* argv[]) {
         const int num_stripes = column->num_rows() / num_rows_per_stripe;
         std::cout << "num" << " num_rows_per_strip is :" << num_rows_per_stripe << " num_strips is :" << num_stripes << std::endl;
         std::cout << "byte_size is :" << index->byte_size() << " compressed_byte_size is :" << index->compressed_byte_size() << std::endl;
-        std::cout << "_result is :" << index->GetQualifyingStripes(428562758, num_stripes).ToString() << std::endl;
+        for(int value=6224950; value<6224970; value++) {
+          std::cout << value << " _result is :" << index->GetQualifyingStripes(value, num_stripes).ToString() << std::endl;
+        }
         // const std::string positive_distinct_lookup_benchmark_name =
         //     absl::StrFormat(/*format=*/"PositiveDistinctLookup/%s/%d/%s",
         //                     column->name(), num_rows_per_stripe, index->name());
