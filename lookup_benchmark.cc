@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
   std::vector<std::unique_ptr<ci::IndexStructureFactory>> index_factories;
   index_factories.push_back(absl::make_unique<ci::CuckooIndexFactory>(
       ci::CuckooAlgorithm::SKEWED_KICKING, ci::kMaxLoadFactor1SlotsPerBucket,
-      /*scan_rate=*/0.01, /*slots_per_bucket=*/1,
+      /*scan_rate=*/0.2, /*slots_per_bucket=*/1,
       /*prefix_bits_optimization=*/false));
   // index_factories.push_back(
   //     absl::make_unique<ci::PerStripeBloomFactory>(/*num_bits_per_key=*/10));
@@ -208,9 +208,9 @@ int main(int argc, char* argv[]) {
         std::shared_ptr<ci::IndexStructure> index = absl::WrapUnique(
             factory->Create(*column, num_rows_per_stripe).release());
         const int num_stripes = column->num_rows() / num_rows_per_stripe;
-        std::cout << "num_rows_Per_strip is :" << num_rows_per_stripe << " num_strips is :" << num_stripes << std::endl;
+        std::cout << "num" << " num_rows_per_strip is :" << num_rows_per_stripe << " num_strips is :" << num_stripes << std::endl;
         std::cout << "byte_size is :" << index->byte_size() << " compressed_byte_size is :" << index->compressed_byte_size() << std::endl;
-        std::cout << "_result is :" << index->GetQualifyingStripes(14468, num_stripes).ToString() << std::endl;
+        std::cout << "_result is :" << index->GetQualifyingStripes(428562758, num_stripes).ToString() << std::endl;
         // const std::string positive_distinct_lookup_benchmark_name =
         //     absl::StrFormat(/*format=*/"PositiveDistinctLookup/%s/%d/%s",
         //                     column->name(), num_rows_per_stripe, index->name());
