@@ -28,7 +28,7 @@ cc_library(
     ],
     data = [
         # Put your csv files here, e.g.
-        # "Vehicle__Snowmobile__and_Boat_Registrations.csv"
+        "Vehicle__Snowmobile__and_Boat_Registrations.csv"
     ],
     deps = [
         ":evaluation_utils",

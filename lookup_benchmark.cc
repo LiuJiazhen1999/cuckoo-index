@@ -196,42 +196,44 @@ int main(int argc, char* argv[]) {
       ci::CuckooAlgorithm::SKEWED_KICKING, ci::kMaxLoadFactor1SlotsPerBucket,
       /*scan_rate=*/0.01, /*slots_per_bucket=*/1,
       /*prefix_bits_optimization=*/false));
-  index_factories.push_back(
-      absl::make_unique<ci::PerStripeBloomFactory>(/*num_bits_per_key=*/10));
-  index_factories.push_back(absl::make_unique<ci::PerStripeXorFactory>());
+  // index_factories.push_back(
+  //     absl::make_unique<ci::PerStripeBloomFactory>(/*num_bits_per_key=*/10));
+  // index_factories.push_back(absl::make_unique<ci::PerStripeXorFactory>());
 
   // Set up the benchmarks.
   for (const std::unique_ptr<ci::Column>& column : table->GetColumns()) {
-    for (size_t num_rows_per_stripe : {1ULL << 13, 1ULL << 16}) {
+    for (size_t num_rows_per_stripe : {50000}) {
       for (const std::unique_ptr<ci::IndexStructureFactory>& factory :
            index_factories) {
         std::shared_ptr<ci::IndexStructure> index = absl::WrapUnique(
             factory->Create(*column, num_rows_per_stripe).release());
         const int num_stripes = column->num_rows() / num_rows_per_stripe;
+        std::cout << "num_rows_Per_strip is :" << num_rows_per_stripe << " num_strips is :" << num_stripes << std::endl;
+        std::cout << "byte_size is :" << index->byte_size() << " compressed_byte_size is :" << index->compressed_byte_size() << std::endl;
+        std::cout << "_result is :" << index->GetQualifyingStripes(14468, num_stripes).ToString() << std::endl;
+        // const std::string positive_distinct_lookup_benchmark_name =
+        //     absl::StrFormat(/*format=*/"PositiveDistinctLookup/%s/%d/%s",
+        //                     column->name(), num_rows_per_stripe, index->name());
+        // ::benchmark::RegisterBenchmark(
+        //     positive_distinct_lookup_benchmark_name.c_str(),
+        //     [&column, index, num_stripes](::benchmark::State& st) -> void {
+        //       BM_PositiveDistinctLookup(*column, index, num_stripes, st);
+        //     });
 
-        const std::string positive_distinct_lookup_benchmark_name =
-            absl::StrFormat(/*format=*/"PositiveDistinctLookup/%s/%d/%s",
-                            column->name(), num_rows_per_stripe, index->name());
-        ::benchmark::RegisterBenchmark(
-            positive_distinct_lookup_benchmark_name.c_str(),
-            [&column, index, num_stripes](::benchmark::State& st) -> void {
-              BM_PositiveDistinctLookup(*column, index, num_stripes, st);
-            });
-
-        const std::string negative_lookup_benchmark_name =
-            absl::StrFormat(/*format=*/"NegativeLookup/%s/%d/%s",
-                            column->name(), num_rows_per_stripe, index->name());
-        ::benchmark::RegisterBenchmark(
-            negative_lookup_benchmark_name.c_str(),
-            [&column, index, num_stripes](::benchmark::State& st) -> void {
-              BM_NegativeLookup(*column, index, num_stripes, st);
-            });
+        // const std::string negative_lookup_benchmark_name =
+        //     absl::StrFormat(/*format=*/"NegativeLookup/%s/%d/%s",
+        //                     column->name(), num_rows_per_stripe, index->name());
+        // ::benchmark::RegisterBenchmark(
+        //     negative_lookup_benchmark_name.c_str(),
+        //     [&column, index, num_stripes](::benchmark::State& st) -> void {
+        //       BM_NegativeLookup(*column, index, num_stripes, st);
+        //     });
       }
     }
   }
 
-  ::benchmark::Initialize(&argc, argv);
-  ::benchmark::RunSpecifiedBenchmarks();
+  // ::benchmark::Initialize(&argc, argv);
+  // ::benchmark::RunSpecifiedBenchmarks();
 
   return EXIT_SUCCESS;
 }
