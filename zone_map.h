@@ -35,7 +35,7 @@ namespace ci {
 
 class ZoneMap : public IndexStructure {
  public:
-  ZoneMap(const std::vector<int>& data, std::size_t num_rows_per_stripe) {
+  ZoneMap(const std::vector<long>& data, std::size_t num_rows_per_stripe) {
     if (data.size() % num_rows_per_stripe != 0) {
       std::cout << "WARNING: Number of values is not a multiple of "
                    "`num_rows_per_stripe`. Ignoring last stripe."
@@ -48,8 +48,8 @@ class ZoneMap : public IndexStructure {
       const std::size_t stripe_begin = num_rows_per_stripe * stripe_id;
       const std::size_t stripe_end = stripe_begin + num_rows_per_stripe;
 
-      int per_stripe_min = std::numeric_limits<int>::max();
-      int per_stripe_max = std::numeric_limits<int>::min();
+      long per_stripe_min = std::numeric_limits<long>::max();
+      long per_stripe_max = std::numeric_limits<long>::min();
 
       for (size_t row_id = stripe_begin; row_id < stripe_end; ++row_id) {
         if (data[row_id] == Column::kIntNullSentinel) continue;
@@ -73,7 +73,7 @@ class ZoneMap : public IndexStructure {
     }
   }
 
-  bool StripeContains(std::size_t stripe_id, int value) const override {
+  bool StripeContains(std::size_t stripe_id, long value) const override {
     if (stripe_id >= num_stripes_) {
       std::cerr << "`stripe_id` is out of bounds." << std::endl;
       exit(EXIT_FAILURE);
@@ -84,7 +84,7 @@ class ZoneMap : public IndexStructure {
   std::string name() const override { return "ZoneMap"; }
 
   size_t byte_size() const override {
-    return sizeof(int) * minimums_.size() + sizeof(int) * maximums_.size();
+    return sizeof(long) * minimums_.size() + sizeof(long) * maximums_.size();
   }
 
   size_t compressed_byte_size() const override {
@@ -103,7 +103,7 @@ class ZoneMap : public IndexStructure {
 
  private:
   std::size_t num_stripes_;
-  std::vector<int> minimums_, maximums_;
+  std::vector<long> minimums_, maximums_;
 };
 
 class ZoneMapFactory : public IndexStructureFactory {

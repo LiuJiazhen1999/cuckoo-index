@@ -102,8 +102,8 @@ TEST(BitPackingTest, MaxBitWidthOnMaxValues) {
 // Bit-packs the given array and then compares the result with the given array.
 // Also checks the size of the bit-packed array.
 template <typename T>
-void CheckBitPack(absl::Span<const T> array, int bit_packed_size) {
-  const int bw = MaxBitWidth(array);
+void CheckBitPack(absl::Span<const T> array, long bit_packed_size) {
+  const long bw = MaxBitWidth(array);
   const size_t num_bytes = BitPackingBytesRequired(bw * array.size());
   EXPECT_EQ(bit_packed_size, num_bytes);
   ByteBuffer buffer;
@@ -154,13 +154,13 @@ TEST(BitPackingTest, BitPack32RangeOfValues) {
 
 // Test bit-widths 0-32 with array-lengths 0-1024.
 TEST(BitPackingTest, BitPack32GetRange) {
-  constexpr int kMaxLength = 1024;
+  constexpr long kMaxLength = 1024;
 
-  for (int bit_width = 0; bit_width <= 32; ++bit_width) {
+  for (long bit_width = 0; bit_width <= 32; ++bit_width) {
     // Fill an array with values that take up to bit_width bits.
     std::vector<uint32_t> src(kMaxLength);
     if (bit_width > 0) {
-      for (int i = 0; i < kMaxLength; ++i) src[i] = 1 << (i % bit_width);
+      for (long i = 0; i < kMaxLength; ++i) src[i] = 1 << (i % bit_width);
     }
     ASSERT_EQ(MaxBitWidth<uint32_t>(src), bit_width);
     ByteBuffer buffer;
@@ -169,14 +169,14 @@ TEST(BitPackingTest, BitPack32GetRange) {
     BitPackedReader<uint32_t> reader(bit_width, buffer.data());
 
     // Check all array lengths from 0 to kMaxLength.
-    for (int length = 0; length < kMaxLength; ++length) {
+    for (long length = 0; length < kMaxLength; ++length) {
       std::vector<uint32_t> result(length);
       reader.GetBatch(length,
                       [&](size_t i, uint32_t value) { result[i] = value; });
       ASSERT_EQ(result, absl::Span<uint32_t>(src.data(), length))
           << "bit_width: " << bit_width << ", length: " << length;
       // Also double-check with Get(..).
-      for (int i = 0; i < length; i++) ASSERT_EQ(reader.Get(i), src[i]);
+      for (long i = 0; i < length; i++) ASSERT_EQ(reader.Get(i), src[i]);
     }
   }
 }
@@ -222,20 +222,20 @@ TEST(BitPackingTest, BitPack64RangeOfValues) {
 }
 
 TEST(BitPackingTest, BitPack64ForPowersOf2) {
-  for (int shift = 0; shift < 64; ++shift) {
+  for (long shift = 0; shift < 64; ++shift) {
     std::vector<uint64_t> values;
     const uint64_t val = 1ULL << shift;
     // Add 8 values, since at the latest after adding 8 values of (shift + 1)
     // bits length, the "start-bit" repeats.
-    for (int i = 0; i < 8; ++i) values.push_back(val);
+    for (long i = 0; i < 8; ++i) values.push_back(val);
 
     CheckBitPack<uint64_t>(
-        values, static_cast<int>(BitPackingBytesRequired(8 * (shift + 1))));
+        values, static_cast<long>(BitPackingBytesRequired(8 * (shift + 1))));
   }
 }
 
 TEST(BitPackingTest, EmptyBitPackedReaderDebugString) {
-  constexpr int bit_width = 0;
+  constexpr long bit_width = 0;
   ByteBuffer buffer;
   StoreBitPacked<uint32_t>({}, bit_width, &buffer);
   BitPackedReader<uint32_t> reader(bit_width, buffer.data());
@@ -243,7 +243,7 @@ TEST(BitPackingTest, EmptyBitPackedReaderDebugString) {
 }
 
 TEST(BitPackingTest, NonEmptyBitPackedReaderDebugString) {
-  constexpr int bit_width = 8;
+  constexpr long bit_width = 8;
   ByteBuffer buffer;
   StoreBitPacked<uint32_t>({0, 1, 2, 255}, bit_width, &buffer);
   BitPackedReader<uint32_t> reader(bit_width, buffer.data());

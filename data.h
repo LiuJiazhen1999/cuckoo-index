@@ -43,14 +43,14 @@
 
 namespace ci {
 
-enum class DataType { STRING, INT };
+enum class DataType { STRING, long };
 
 inline std::string DataTypeName(DataType data_type) {
   switch (data_type) {
     case DataType::STRING:
       return "STRING";
-    case DataType::INT:
-      return "INT";
+    case DataType::long:
+      return "long";
   }
 
   return "UNKNOWN";
@@ -62,21 +62,21 @@ using ColumnPtr = std::unique_ptr<Column>;
 // Holds data and provides stats.
 class Column {
  public:
-  // Note that we dict-encode NULL strings as int 0. Thus, the sentinel value
+  // Note that we dict-encode NULL strings as long 0. Thus, the sentinel value
   // should not be changed without changing the dict encoding in the `Column`
   // constructor below.
-  static constexpr int kIntNullSentinel = 0;
+  static constexpr long kIntNullSentinel = 0;
   static constexpr const char* kStringNullSentinel = "NULL";
 
-  static ColumnPtr IntColumn(const std::string& name, std::vector<int> data) {
-    return ColumnPtr(new Column(name, DataType::INT, std::move(data)));
+  static ColumnPtr IntColumn(const std::string& name, std::vector<long> data) {
+    return ColumnPtr(new Column(name, DataType::long, std::move(data)));
   }
 
   Column(const std::string& name, const DataType type,
          const std::vector<std::string>& str_data)
       : name_(name), type_(type), str_data_(str_data) {
-    if (type == DataType::INT) {
-      // Convert string to int.
+    if (type == DataType::long) {
+      // Convert string to long.
       data_.reserve(str_data.size());
       for (const std::string& str : str_data) data_.push_back(std::stoi(str));
     } else if (type == DataType::STRING) {
@@ -90,7 +90,7 @@ class Column {
       // (strings that do not exist in the indexed data) that fall within the
       // range of dense integers. Thus, ZoneMaps will be 100% effective in such
       // cases. That is, because we need to choose an integer outside of the
-      // range for negative lookups keys (e.g., int::max).
+      // range for negative lookups keys (e.g., long::max).
       //
       // We make sure that NULL values get an ID of 0 – that way we can detect
       // and ignore them when building some data structures, e.g. ZoneMaps.
@@ -103,7 +103,7 @@ class Column {
       std::sort(distinct_strings_v.begin(), distinct_strings_v.end());
       distinct_strings_v.insert(distinct_strings_v.begin(),
                                 kStringNullSentinel);
-      int i = 0;
+      long i = 0;
       for (const std::string& str : distinct_strings_v) {
         string_dict_[str] = i++;
       }
@@ -122,7 +122,7 @@ class Column {
     }
 
     // Initialize `distinct_values_`.
-    distinct_values_ = std::unordered_set<int>(data_.begin(), data_.end());
+    distinct_values_ = std::unordered_set<long>(data_.begin(), data_.end());
 
     // Set `min_` and `max_`.
     const auto min_max = std::minmax_element(begin(data_), end(data_));
@@ -148,12 +148,12 @@ class Column {
               << std::endl;
   }
 
-  bool Contains(int value) const {
+  bool Contains(long value) const {
     return distinct_values_.find(value) != distinct_values_.end();
   }
 
   bool StripeContains(std::size_t num_rows_per_stripe, std::size_t stripe_id,
-                      int value) const {
+                      long value) const {
     const std::size_t num_stripes = data_.size() / num_rows_per_stripe;
     if (stripe_id >= num_stripes) {
       std::cerr << "`stripe_id` is out of bounds." << std::endl;
@@ -173,7 +173,7 @@ class Column {
   // position.
   void Reorder(absl::Span<const size_t> indexes) {
     assert(data_.size() == indexes.size());
-    std::vector<int> new_data(data_.size());
+    std::vector<long> new_data(data_.size());
     for (size_t i = 0; i < data_.size(); ++i) {
       new_data[i] = data_[indexes[i]];
     }
@@ -182,12 +182,12 @@ class Column {
 
   std::string name() const { return name_; }
   DataType type() const { return type_; }
-  const std::vector<int>& data() const { return data_; }
-  int operator[](std::size_t idx) const { return data_[idx]; }
+  const std::vector<long>& data() const { return data_; }
+  long operator[](std::size_t idx) const { return data_[idx]; }
 
   // Returns the original value (not an encoded ID) at the given position.
   std::string ValueAt(std::size_t idx) const {
-    // For INT column just return the value.
+    // For long column just return the value.
     if (string_dict_.empty()) return absl::StrCat(data_[idx]);
 
     // For STRING column reverse the mapping.
@@ -197,20 +197,20 @@ class Column {
         ->first;
   }
 
-  std::vector<int> distinct_values() const {
-    return std::vector<int>(distinct_values_.begin(), distinct_values_.end());
+  std::vector<long> distinct_values() const {
+    return std::vector<long>(distinct_values_.begin(), distinct_values_.end());
   }
   std::size_t num_rows() const { return data_.size(); }
   std::size_t num_distinct_values() const { return distinct_values_.size(); }
-  int min() const { return min_; }
-  int max() const { return max_; }
+  long min() const { return min_; }
+  long max() const { return max_; }
   std::size_t compressed_size_bytes(size_t num_rows_per_stripe) const {
     const size_t num_stripes = data_.size() / num_rows_per_stripe;
     size_t compressed_size = 0;
     // Compress the stripes individually.
     for (size_t stripe = 0; stripe < num_stripes; ++stripe) {
       const size_t start_row = stripe * num_rows_per_stripe;
-      if (type_ == DataType::INT) {
+      if (type_ == DataType::long) {
         assert(start_row + num_rows_per_stripe <= data_.size());
         const absl::string_view data_view =
             absl::string_view(reinterpret_cast<const char*>(&data_[start_row]),
@@ -231,11 +231,11 @@ class Column {
   }
 
  private:
-  Column(const std::string& name, const DataType type, std::vector<int> data)
+  Column(const std::string& name, const DataType type, std::vector<long> data)
       : name_(name), type_(type), data_(std::move(data)) {
-    assert(type <= DataType::INT);
+    assert(type <= DataType::long);
     // Initialize `distinct_values_`.
-    distinct_values_ = std::unordered_set<int>(data_.begin(), data_.end());
+    distinct_values_ = std::unordered_set<long>(data_.begin(), data_.end());
 
     // Set `min_` and `max_`.
     const auto min_max = std::minmax_element(begin(data_), end(data_));
@@ -253,15 +253,15 @@ class Column {
 
   std::string name_;
   DataType type_;
-  std::vector<int> data_;
-  std::unordered_set<int> distinct_values_;
+  std::vector<long> data_;
+  std::unordered_set<long> distinct_values_;
   // Used to map strings to ints in an order-preserving way.
-  std::unordered_map<std::string, int> string_dict_;
+  std::unordered_map<std::string, long> string_dict_;
   // The original vector of strings if given to the c'tor.
   const std::vector<std::string> str_data_;
 
   // Stats.
-  int min_, max_;
+  long min_, max_;
   // Standard moments: mean, variance, skewness, and excess kurtosis.
   // https://www.gnu.org/software/gsl/doc/html/statistics.html
   double mean_, variance_, skewness_, kurtosis_;
@@ -330,8 +330,8 @@ class Table {
 
       if (is_column_int) {
         // If the column is an integer column, change its type to
-        // DataType::INT and convert all sentinel values.
-        column_infos[i].type = DataType::INT;
+        // DataType::long and convert all sentinel values.
+        column_infos[i].type = DataType::long;
         for (std::string& value : csv_data[i]) {
           if (value == Column::kStringNullSentinel) {
             value = absl::StrCat(Column::kIntNullSentinel);

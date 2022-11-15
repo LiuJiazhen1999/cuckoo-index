@@ -37,7 +37,7 @@ void CheckValueAt(DataType data_type, const std::vector<T> expected_values) {}
 TEST(ColumnTest, ValueAtReturnsValuesForIntColumns) {
   std::vector<std::string> expected_values = {"42", "13", "1", "42"};
   auto column =
-      absl::make_unique<Column>("column_name", DataType::INT, expected_values);
+      absl::make_unique<Column>("column_name", DataType::long, expected_values);
 
   std::vector<std::string> actual_values;
   actual_values.reserve(column->num_rows());
@@ -64,7 +64,7 @@ TEST(ColumnTest, ValueAtReturnsValuesForStringColumns) {
 
 TEST(ColumnTest, CompressInts) {
   auto column =
-      absl::make_unique<Column>("column_name", DataType::INT,
+      absl::make_unique<Column>("column_name", DataType::long,
                                 std::vector<std::string>{"0", "1", "2", "3"});
 
   const size_t compressed_size_1_stripe =
@@ -96,7 +96,7 @@ TEST(ColumnTest, CompressStrings) {
 
 TEST(ColumnTest, Reorder) {
   auto column =
-      absl::make_unique<Column>("column_name", DataType::INT,
+      absl::make_unique<Column>("column_name", DataType::long,
                                 std::vector<std::string>{"0", "1", "2", "3"});
 
   const std::vector<size_t> indexes = {2, 1, 3, 0};
@@ -109,7 +109,7 @@ TEST(ColumnTest, Reorder) {
 TEST(DataTest, SortWithCardinalityKey) {
   std::vector<std::unique_ptr<Column>> columns;
   columns.push_back(absl::make_unique<Column>(
-      "customer_id", DataType::INT,
+      "customer_id", DataType::long,
       std::vector<std::string>({"42", "13", "1", "42"})));
   columns.push_back(absl::make_unique<Column>(
       "country", DataType::STRING,

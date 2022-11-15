@@ -36,7 +36,7 @@ namespace ci {
 
 class PerStripeBloom : public IndexStructure {
  public:
-  PerStripeBloom(const std::vector<int>& data, std::size_t num_rows_per_stripe,
+  PerStripeBloom(const std::vector<long>& data, std::size_t num_rows_per_stripe,
                  std::size_t num_bits_per_key)
       : num_bits_per_key_(num_bits_per_key),
         policy_(leveldb::NewBloomFilterPolicy(num_bits_per_key_)) {
@@ -58,12 +58,12 @@ class PerStripeBloom : public IndexStructure {
       // Create the filter for the current stripe.
       const std::vector<leveldb::Slice> slices(string_values.begin(),
                                                string_values.end());
-      policy_->CreateFilter(slices.data(), static_cast<int>(slices.size()),
+      policy_->CreateFilter(slices.data(), static_cast<long>(slices.size()),
                             &filters_[stripe_id]);
     }
   }
 
-  bool StripeContains(std::size_t stripe_id, int value) const override {
+  bool StripeContains(std::size_t stripe_id, long value) const override {
     if (stripe_id >= num_stripes_) {
       std::cerr << "`stripe_id` is out of bounds." << std::endl;
       exit(EXIT_FAILURE);

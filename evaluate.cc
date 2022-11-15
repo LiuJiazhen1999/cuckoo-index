@@ -38,9 +38,9 @@
 #include "per_stripe_xor.h"
 #include "zone_map.h"
 
-ABSL_FLAG(int, generate_num_values, 100000,
+ABSL_FLAG(long, generate_num_values, 100000,
           "Number of values to generate (number of rows).");
-ABSL_FLAG(int, num_unique_values, 1000,
+ABSL_FLAG(long, num_unique_values, 1000,
           "Number of unique values to generate (cardinality).");
 ABSL_FLAG(std::string, input_csv_path, "", "Path to the input CSV file.");
 ABSL_FLAG(std::string, output_csv_path, "",
@@ -50,7 +50,7 @@ ABSL_FLAG(std::vector<std::string>, columns_to_test, {"company_name"},
           "'company_name,country_code'.");
 ABSL_FLAG(std::vector<std::string>, num_rows_per_stripe_to_test, {"10000"},
           "Number of rows per stripe. Defaults to 10,000.");
-ABSL_FLAG(int, num_lookups, 1000, "Number of lookups. Defaults to 1,000.");
+ABSL_FLAG(long, num_lookups, 1000, "Number of lookups. Defaults to 1,000.");
 ABSL_FLAG(std::vector<std::string>, test_cases, {"positive_uniform"},
           "Comma-separated list of test cases, e.g. "
           "'positive_uniform,positive_distinct'.");
@@ -71,7 +71,7 @@ static bool IsValidSorting(absl::string_view sorting) {
 }
 }  // namespace
 
-int main(int argc, char* argv[]) {
+long main(long argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
 
   const size_t generate_num_values = absl::GetFlag(FLAGS_generate_num_values);

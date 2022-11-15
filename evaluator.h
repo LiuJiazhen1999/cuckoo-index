@@ -96,7 +96,7 @@ class Evaluator {
   // `num_false_positive_stripes` (number of times the `index` did not prune
   // a stripe even though it could have).
   void ProbeAllStripes(const Column& column, const IndexStructure& index,
-                       int value, std::size_t num_rows_per_stripe,
+                       long value, std::size_t num_rows_per_stripe,
                        std::size_t num_stripes,
                        std::size_t* num_true_negative_stripes,
                        std::size_t* num_false_positive_stripes);

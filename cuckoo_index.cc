@@ -41,16 +41,16 @@ namespace {
 constexpr double kNumBucketsGrowFactor = 1.01;
 
 // Returns a map from values to their stripe-bitmaps.
-const absl::flat_hash_map<int, Bitmap64Ptr> ValueToStripeBitmaps(
+const absl::flat_hash_map<long, Bitmap64Ptr> ValueToStripeBitmaps(
     const Column& column, size_t num_rows_per_stripe) {
   ScopedProfile profile(Counter::ValueToStripeBitmaps);
-  absl::flat_hash_map<int, Bitmap64Ptr> bitmaps;
+  absl::flat_hash_map<long, Bitmap64Ptr> bitmaps;
   // Round down the number of rows to the next multiple of
   // `num_rows_per_stripe`, i.e., ignore the last stripe as elsewhere.
   const size_t num_stripes = column.num_rows() / num_rows_per_stripe;
   const size_t num_rows = num_stripes * num_rows_per_stripe;
   for (size_t row = 0; row < num_rows; ++row) {
-    const int value = column[row];
+    const long value = column[row];
     if (!bitmaps.contains(value))
       bitmaps[value] = absl::make_unique<Bitmap64>(/*size=*/num_stripes);
     bitmaps[value]->Set(row / num_rows_per_stripe, true);
@@ -90,7 +90,7 @@ std::vector<Bucket> DistributeByKicking(size_t num_buckets,
 // failed, i.e., if there were too few buckets.
 std::vector<Bucket> Distribute(
     size_t num_buckets, size_t slots_per_bucket, CuckooAlgorithm cuckoo_alg,
-    const absl::flat_hash_set<int>& distinct_values) {
+    const absl::flat_hash_set<long>& distinct_values) {
   std::vector<CuckooValue> values;
   values.reserve(distinct_values.size());
   for (size_t value : distinct_values)
@@ -117,7 +117,7 @@ std::vector<Bucket> Distribute(
 // the corresponding `slot_bitmaps` entries.
 void CreateSlots(double scan_rate, size_t slots_per_bucket,
                  const std::vector<Bucket>& buckets,
-                 absl::flat_hash_map<int, Bitmap64Ptr>* value_to_bitmap,
+                 absl::flat_hash_map<long, Bitmap64Ptr>* value_to_bitmap,
                  std::vector<Fingerprint>* slot_fingerprints,
                  const bool prefix_bits_optimization,
                  Bitmap64Ptr* use_prefix_bits_bitmap,
@@ -235,7 +235,7 @@ std::string Encode(const FingerprintStore& fingerprint_store,
 
 }  // namespace
 
-bool CuckooIndex::StripeContains(size_t stripe_id, int value) const {
+bool CuckooIndex::StripeContains(size_t stripe_id, long value) const {
   const CuckooValue val(value, num_buckets_);
   size_t slot;
   if (!BucketContains(val.primary_bucket, val.fingerprint, &slot)) {
@@ -252,7 +252,7 @@ bool CuckooIndex::StripeContains(size_t stripe_id, int value) const {
   return global_slot_bitmap_->Get(global_slot_bitmap_offset);
 }
 
-Bitmap64 CuckooIndex::GetQualifyingStripes(int value,
+Bitmap64 CuckooIndex::GetQualifyingStripes(long value,
                                            size_t num_stripes) const {
   const CuckooValue val(value, num_buckets_);
   size_t slot;
@@ -290,12 +290,12 @@ bool CuckooIndex::BucketContains(size_t bucket, uint64_t fingerprint,
 
 std::unique_ptr<IndexStructure> CuckooIndexFactory::Create(
     const Column& column, size_t num_rows_per_stripe) const {
-  absl::flat_hash_map<int, Bitmap64Ptr> value_to_bitmap =
+  absl::flat_hash_map<long, Bitmap64Ptr> value_to_bitmap =
       ValueToStripeBitmaps(column, num_rows_per_stripe);
   // Fetch the set of distinct-values in `value_to_bitmap`. Note that this is
   // not necessarily the same as column.distinct_values(), since rows may have
   // been dropped at the end (so each stripe has the same size).
-  absl::flat_hash_set<int> distinct_values;
+  absl::flat_hash_set<long> distinct_values;
   distinct_values.reserve(value_to_bitmap.size());
   for (const auto& [value, _] : value_to_bitmap) distinct_values.insert(value);
 

@@ -178,7 +178,7 @@ std::string SerializeBitmap(const Bitmap64& bitmap) {
   return result;
 }
 
-Bitmap64 CreateBitmap(absl::Span<const int> bits) {
+Bitmap64 CreateBitmap(absl::Span<const long> bits) {
   Bitmap64 bitmap(bits.size());
   for (size_t i = 0; i < bits.size(); ++i) {
     bitmap.Set(i, static_cast<bool>(bits[i]));

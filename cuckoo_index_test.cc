@@ -33,7 +33,7 @@ namespace ci {
 constexpr size_t kNumRows = 300;
 constexpr size_t kNumRowsPerStripe = 3;
 // Number of negative lookups to perform.
-constexpr int kNumNegativeLookups = 10 * 1000;
+constexpr long kNumNegativeLookups = 10 * 1000;
 
 // Returns a column with `num_rows` entries and `num_values` different values,
 // set in increasing manner of `num_rows / num_values` runs with the same value.
@@ -42,15 +42,15 @@ ColumnPtr FillColumn(size_t num_rows, size_t num_values) {
   assert(num_rows >= num_values);
   assert(num_rows % num_values == 0);
   const size_t factor = num_rows / num_values;
-  std::vector<int> data(num_rows, 0);
+  std::vector<long> data(num_rows, 0);
   for (size_t i = 0; i < num_rows; ++i) data[i] = i / factor;
-  return Column::IntColumn("int-column", std::move(data));
+  return Column::IntColumn("long-column", std::move(data));
 }
 
 // Checks that positive lookups are exact (for all values in the column).
 void CheckPositiveLookups(const Column& column, const IndexStructure* index) {
   const size_t num_stripes = column.num_rows() / kNumRowsPerStripe;
-  for (const int value : column.distinct_values()) {
+  for (const long value : column.distinct_values()) {
     const Bitmap64 result = index->GetQualifyingStripes(value, num_stripes);
     for (size_t stripe_id = 0; stripe_id < num_stripes; ++stripe_id) {
       EXPECT_EQ(column.StripeContains(kNumRowsPerStripe, stripe_id, value),
@@ -63,10 +63,10 @@ void CheckPositiveLookups(const Column& column, const IndexStructure* index) {
 double ScanRateNegativeLookups(const Column& column,
                                const IndexStructure* index) {
   const size_t num_stripes = column.num_rows() / kNumRowsPerStripe;
-  const int start = column.max() + 1;
+  const long start = column.max() + 1;
   assert(start + kNumNegativeLookups <= std::numeric_limits<int32_t>::max());
   size_t num_false_positive_stripes = 0;
-  for (int value = start; value < start + kNumNegativeLookups; ++value) {
+  for (long value = start; value < start + kNumNegativeLookups; ++value) {
     const Bitmap64 result = index->GetQualifyingStripes(value, num_stripes);
     num_false_positive_stripes += result.GetOnesCount();
   }

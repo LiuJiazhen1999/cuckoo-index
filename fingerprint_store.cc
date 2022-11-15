@@ -282,7 +282,7 @@ void FingerprintStore::PrintStats() const {
 size_t FingerprintStore::GetBucketIndex(const size_t block_idx,
                                         const size_t bit_idx) const {
   size_t pos = bit_idx;
-  for (int i = block_idx - 1; i >= 0; --i) {
+  for (long i = block_idx - 1; i >= 0; --i) {
     if (!SelectZero(*(block_bitmaps_[i]), pos, &pos)) {
       std::cerr << "Insufficient number of zeros in block bitmap " << i
                 << std::endl;

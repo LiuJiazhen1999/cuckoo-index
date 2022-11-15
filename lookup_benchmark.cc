@@ -71,9 +71,9 @@
 #include "per_stripe_bloom.h"
 #include "per_stripe_xor.h"
 
-ABSL_FLAG(int, generate_num_values, 100000,
+ABSL_FLAG(long, generate_num_values, 100000,
 "Number of values to generate (number of rows).");
-ABSL_FLAG(int, num_unique_values, 1000,
+ABSL_FLAG(long, num_unique_values, 1000,
 "Number of unique values to generate (cardinality).");
 ABSL_FLAG(std::string, input_csv_path, "", "Path to the input CSV file.");
 ABSL_FLAG(std::vector<std::string>, columns_to_test, {},
@@ -101,9 +101,9 @@ bool IsValidSorting(absl::string_view sorting) {
 
 void BM_PositiveDistinctLookup(const ci::Column& column,
                                std::shared_ptr<ci::IndexStructure> index,
-                               const int num_stripes, benchmark::State& state) {
+                               const long num_stripes, benchmark::State& state) {
   std::mt19937 gen(42);
-  std::vector<int> distinct_values = column.distinct_values();
+  std::vector<long> distinct_values = column.distinct_values();
   // Remove NULLs from the lookup.
   distinct_values.erase(
       std::remove(distinct_values.begin(), distinct_values.end(),
@@ -112,7 +112,7 @@ void BM_PositiveDistinctLookup(const ci::Column& column,
   std::uniform_int_distribution<std::size_t> distinct_values_offset_d(
       0, distinct_values.size() - 1);
 
-  std::vector<int> values;
+  std::vector<long> values;
   values.reserve(kLookupBatchSize);
   for (size_t i = 0; i < kLookupBatchSize; ++i) {
     values.push_back(distinct_values[distinct_values_offset_d(gen)]);
@@ -128,15 +128,15 @@ void BM_PositiveDistinctLookup(const ci::Column& column,
 
 void BM_NegativeLookup(const ci::Column& column,
                        std::shared_ptr<ci::IndexStructure> index,
-                       const int num_stripes, benchmark::State& state) {
+                       const long num_stripes, benchmark::State& state) {
   std::mt19937 gen(42);
-  std::uniform_int_distribution<int> value_d(std::numeric_limits<int>::min(),
-                                             std::numeric_limits<int>::max());
-  std::vector<int> values;
+  std::uniform_int_distribution<long> value_d(std::numeric_limits<long>::min(),
+                                             std::numeric_limits<long>::max());
+  std::vector<long> values;
   values.reserve(kLookupBatchSize);
   for (size_t i = 0; i < kLookupBatchSize; ++i) {
     // Draw random value that is not present in the column.
-    int value = value_d(gen);
+    long value = value_d(gen);
     while (column.Contains(value)) {
       value = value_d(gen);
     }
@@ -151,7 +151,7 @@ void BM_NegativeLookup(const ci::Column& column,
   }
 }
 
-int main(int argc, char* argv[]) {
+long main(long argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
 
   const size_t generate_num_values = absl::GetFlag(FLAGS_generate_num_values);
@@ -207,10 +207,10 @@ int main(int argc, char* argv[]) {
            index_factories) {
         std::shared_ptr<ci::IndexStructure> index = absl::WrapUnique(
             factory->Create(*column, num_rows_per_stripe).release());
-        const int num_stripes = column->num_rows() / num_rows_per_stripe;
+        const long num_stripes = column->num_rows() / num_rows_per_stripe;
         std::cout << "num" << " num_rows_per_strip is :" << num_rows_per_stripe << " num_strips is :" << num_stripes << std::endl;
         std::cout << "byte_size is :" << index->byte_size() << " compressed_byte_size is :" << index->compressed_byte_size() << std::endl;
-        for(int value=6224950; value<6224970; value++) {
+        for(long value=6224950; value<6224970; value++) {
           std::cout << value << " _result is :" << index->GetQualifyingStripes(value, num_stripes).ToString() << std::endl;
         }
         // const std::string positive_distinct_lookup_benchmark_name =

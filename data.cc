@@ -22,7 +22,7 @@
 
 namespace ci {
 
-const int Column::kIntNullSentinel;
+const long Column::kIntNullSentinel;
 const char* const Column::kStringNullSentinel;
 
 std::unique_ptr<Table> GenerateUniformData(const size_t generate_num_values,
@@ -30,19 +30,19 @@ std::unique_ptr<Table> GenerateUniformData(const size_t generate_num_values,
   std::mt19937 gen(42);
 
   // Generate unique values.
-  std::unordered_set<int> set;
+  std::unordered_set<long> set;
   set.reserve(num_unique_values);
-  std::uniform_int_distribution<int>
-      d_int(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+  std::uniform_int_distribution<long>
+      d_int(std::numeric_limits<long>::min(), std::numeric_limits<long>::max());
   while (set.size() < num_unique_values) {
     set.insert(d_int(gen));
   }
   // Copy to vector.
-  std::vector<int> unique_values(set.begin(), set.end());
+  std::vector<long> unique_values(set.begin(), set.end());
 
   // Draw each unique value once to ensure `num_unique_values`. Without
   // this, we might miss out on certain unique values.
-  std::vector<int> values(unique_values.begin(), unique_values.end());
+  std::vector<long> values(unique_values.begin(), unique_values.end());
 
   // Fill up remaining values by drawing random `unique_values`.
   values.reserve(generate_num_values);

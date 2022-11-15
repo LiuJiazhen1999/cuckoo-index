@@ -111,7 +111,7 @@ bool CheckWhetherAllBucketsOnlyContainSameSizeFingerprints(
 
 // Representation of a value as its two buckets and fingerprint.
 struct CuckooValue {
-  CuckooValue(int value, size_t num_buckets) {
+  CuckooValue(long value, size_t num_buckets) {
     orig_value = value;
 
     // *** POSSIBLY CHOOSE ANOTHER HASHING ALGORITHM ***
@@ -131,7 +131,7 @@ struct CuckooValue {
                            fingerprint, primary_bucket, secondary_bucket);
   }
 
-  int orig_value;
+  long orig_value;
   size_t primary_bucket;
   size_t secondary_bucket;
   uint64_t fingerprint;

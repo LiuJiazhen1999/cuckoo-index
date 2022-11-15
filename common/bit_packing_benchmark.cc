@@ -62,9 +62,9 @@ namespace {
 
 // Helper method used in benchmarks to check the time it takes to create
 // a bit-packed array with the given number of entries of the given value.
-void CheckStoreBitPacked32(benchmark::State& state, int size, uint32_t value) {
+void CheckStoreBitPacked32(benchmark::State& state, long size, uint32_t value) {
   const std::vector<uint32_t> vec(size, value);
-  const int bw = BitWidth(value);
+  const long bw = BitWidth(value);
   ByteBuffer buffer;
 
   while (state.KeepRunningBatch(size)) {
@@ -75,7 +75,7 @@ void CheckStoreBitPacked32(benchmark::State& state, int size, uint32_t value) {
   assert(value == reader.Get(0));
 }
 
-constexpr int kArraySize = 100 * 1000;
+constexpr long kArraySize = 100 * 1000;
 
 static void BM_BitPack32_Zeros(benchmark::State& state) {
   CheckStoreBitPacked32(state, kArraySize, 0);
@@ -104,15 +104,15 @@ BENCHMARK(BM_BitPack32_31Bits);
 
 // Helper method used in benchmarks to check the time it takes to read
 // a bit-packed array with the given number of entries of the given value.
-void ReadBitPacked32(benchmark::State& state, int size, uint32_t value) {
+void ReadBitPacked32(benchmark::State& state, long size, uint32_t value) {
   const std::vector<uint32_t> vec(size, value);
-  const int bw = BitWidth(value);
+  const long bw = BitWidth(value);
   ByteBuffer buffer;
   StoreBitPacked<uint32_t>(vec, bw, &buffer);
 
   while (state.KeepRunningBatch(size)) {
     BitPackedReader<uint32_t> reader(bw, buffer.data());
-    for (int i = 0; i < size; ++i) benchmark::DoNotOptimize(reader.Get(i));
+    for (long i = 0; i < size; ++i) benchmark::DoNotOptimize(reader.Get(i));
   }
 }
 
@@ -148,9 +148,9 @@ BENCHMARK(BM_Read_32Bits);
 
 // Helper method used in benchmarks to check the time it takes to read
 // a bit-packed array with the given number of entries of the given value.
-void BatchReadBitPacked32(benchmark::State& state, int size, uint32_t value) {
+void BatchReadBitPacked32(benchmark::State& state, long size, uint32_t value) {
   const std::vector<uint32_t> vec(size, value);
-  const int bw = BitWidth(value);
+  const long bw = BitWidth(value);
   ByteBuffer buffer;
   StoreBitPacked<uint32_t>(vec, bw, &buffer);
 

@@ -47,7 +47,7 @@ std::string SerializeBitmap(const Bitmap64& bitmap);
 // Returns a bitmap with the given `bits`. bits[i] can be 0 or 1 and determines
 // whether the i-th bit is set. For example, CreateBitmap({1,0}) would return a
 // two-bit bitmap with the first one being set.
-Bitmap64 CreateBitmap(absl::Span<const int> bits);
+Bitmap64 CreateBitmap(absl::Span<const long> bits);
 
 // Returns the density d of the given `bitmap`. d is the share of 1 bits (e.g.,
 // 0.1 means that 10% of the bits are set).

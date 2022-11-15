@@ -88,9 +88,9 @@
 #include "per_stripe_bloom.h"
 #include "per_stripe_xor.h"
 
-ABSL_FLAG(int, generate_num_values, 100000,
+ABSL_FLAG(long, generate_num_values, 100000,
 "Number of values to generate (number of rows).");
-ABSL_FLAG(int, num_unique_values, 1000,
+ABSL_FLAG(long, num_unique_values, 1000,
 "Number of unique values to generate (cardinality).");
 ABSL_FLAG(std::string, input_csv_path, "", "Path to the input CSV file.");
 ABSL_FLAG(std::vector<std::string>, columns_to_test, {},
@@ -138,7 +138,7 @@ void BM_BuildTime(const ci::Column& column,
       benchmark::Counter::kAvgIterations);
 }
 
-int main(int argc, char* argv[]) {
+long main(long argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
 
   const size_t generate_num_values = absl::GetFlag(FLAGS_generate_num_values);

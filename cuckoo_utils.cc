@@ -61,7 +61,7 @@ size_t GetMinNumBuckets(const size_t num_values,
 size_t GetMinCollisionFreeFingerprintLength(
     const std::vector<uint64_t>& fingerprints, const bool use_prefix_bits) {
   if (fingerprints.size() < 2) return 0;
-  int num_bits = 1;
+  long num_bits = 1;
   for (; num_bits <= 64; ++num_bits) {
     absl::flat_hash_set<uint64_t> unique_fingerprints;
     bool success = true;
@@ -91,7 +91,7 @@ size_t GetMinCollisionFreeFingerprintLength(
 size_t GetMinCollisionFreeFingerprintPrefixOrSuffix(
     const std::vector<uint64_t>& fingerprints, bool* use_prefix_bits) {
   // Determine minimum number of bits starting with lowest bit.
-  const int num_suffix_bits = GetMinCollisionFreeFingerprintLength(
+  const long num_suffix_bits = GetMinCollisionFreeFingerprintLength(
       fingerprints, /*use_prefix_bits=*/false);
 
   if (num_suffix_bits <= 1) {
@@ -101,7 +101,7 @@ size_t GetMinCollisionFreeFingerprintPrefixOrSuffix(
   }
 
   // Determine minimum number of bits starting with highest bit.
-  const int num_prefix_bits = GetMinCollisionFreeFingerprintLength(
+  const long num_prefix_bits = GetMinCollisionFreeFingerprintLength(
       fingerprints, /*use_prefix_bits=*/true);
 
   if (num_suffix_bits <= num_prefix_bits) {

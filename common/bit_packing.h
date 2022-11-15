@@ -51,10 +51,10 @@ inline uint32_t BitsRequired64(uint64_t x) {
 // Returns the number of bits needed for the given uint32_t / uint64_t value.
 // Assumes that we need 0 bits to encode val = 0.
 template <typename T>
-int BitWidth(T val);
+long BitWidth(T val);
 
 template <>
-inline int BitWidth<uint32_t>(uint32_t val) {
+inline long BitWidth<uint32_t>(uint32_t val) {
   if (ABSL_PREDICT_FALSE(val == 0))
     return 0;
   else
@@ -62,7 +62,7 @@ inline int BitWidth<uint32_t>(uint32_t val) {
 }
 
 template <>
-inline int BitWidth<uint64_t>(uint64_t val) {
+inline long BitWidth<uint64_t>(uint64_t val) {
   if (ABSL_PREDICT_FALSE(val == 0))
     return 0;
   else
@@ -73,7 +73,7 @@ inline int BitWidth<uint64_t>(uint64_t val) {
 // uint32_t/uint64_t-array of the given size. Returns 0 if all entries in the
 // array are equal to 0 or if size = 0.
 template <typename T>
-inline int MaxBitWidth(absl::Span<const T> array) {
+inline long MaxBitWidth(absl::Span<const T> array) {
   if (array.empty()) return 0;
   return BitWidth<T>(*std::max_element(array.begin(), array.end()));
 }
@@ -102,11 +102,11 @@ namespace internal {
 // * bit-width > 58: In the extreme case the payload starts at the 7th bit of
 //   the first byte => we read 1 bit in the first byte then need to read > 56
 //   bits, i.e., more than just 7 bytes.
-constexpr int kMaxSingleWordBitWidth = 58;
-constexpr int kSlopBytes = 8;
+constexpr long kMaxSingleWordBitWidth = 58;
+constexpr long kSlopBytes = 8;
 
 // Returns a mask with the lowest num_bits set. Works only for num_bits < 64.
-inline uint64_t FastBitMask(int num_bits) {
+inline uint64_t FastBitMask(long num_bits) {
   // Note num_bits = 64 cannot be computed with a single shift, since 1ULL << 64
   // is not defined and in practice results in 1ULL.
   return (1ULL << num_bits) - 1ULL;
@@ -123,14 +123,14 @@ inline uint64_t FastBitMask(int num_bits) {
 // in `internal::Unroll` below (notable difference: here uint64_t is supported).
 // The writing is not as performance-critical => no unrolling for now.
 template <typename T>
-inline void StoreValue(const uint64_t val, const int bit_width, uint64_t* word,
+inline void StoreValue(const uint64_t val, const long bit_width, uint64_t* word,
                        size_t* shift, char** data) {
   static_assert(
       std::is_same<T, uint32_t>::value || std::is_same<T, uint64_t>::value,
       "Only uint32_t and uint64_t supported");
   assert(BitWidth(val) <= bit_width);
   assert(*shift < 8);
-  assert((*word & (~FastBitMask(static_cast<int>(*shift)))) == 0);
+  assert((*word & (~FastBitMask(static_cast<long>(*shift)))) == 0);
 
   *word |= val << *shift;
   *shift += bit_width;
@@ -157,7 +157,7 @@ inline void StoreValue(const uint64_t val, const int bit_width, uint64_t* word,
     *word = val >> (bit_width - *shift);
   }
   // Check that no bits with position >= `shift` are set.
-  assert((*word & ~FastBitMask(static_cast<int>(*shift))) == 0);
+  assert((*word & ~FastBitMask(static_cast<long>(*shift))) == 0);
 }
 
 }  // namespace internal
@@ -165,7 +165,7 @@ inline void StoreValue(const uint64_t val, const int bit_width, uint64_t* word,
 // Adds the given `array` of type `T` (must be uint32_t or uint64_t) in fixed
 // `bit_width` encoding to `buffer`.
 template <typename T>
-void StoreBitPacked(absl::Span<const T> array, const int bit_width,
+void StoreBitPacked(absl::Span<const T> array, const long bit_width,
                     ByteBuffer* buffer) {
   if (bit_width == 0) return;
   const size_t num_bytes = BitPackingBytesRequired(bit_width * array.size());
@@ -214,7 +214,7 @@ class BitPackedReader {
  public:
   // Does *not* take ownership of the array, i.e., its lifetime must be longer
   // than the lifetime of this reader.
-  BitPackedReader(int bit_width, const char* data)
+  BitPackedReader(long bit_width, const char* data)
       : bit_width_(bit_width), data_(data) {}
 
   // Empty BitPackedReader.
@@ -230,14 +230,14 @@ class BitPackedReader {
     const size_t byte0_offset = bit0_offset >> 3;
     const char* byte0 = data_ + byte0_offset;
     // The index of the 0th bit within byte0.
-    const int start = bit0_offset & 0x7;
+    const long start = bit0_offset & 0x7;
     uint64_t val = absl::little_endian::Load64(byte0) >> start;
 
     // For uint64_t we might overflow into the next word. Add the is_same check
     // so the compiler can get rid of this if-statement entirely for uint32_t.
     if (std::is_same<T, uint64_t>::value &&
         ABSL_PREDICT_FALSE(bit_width_ > internal::kMaxSingleWordBitWidth)) {
-      const int next_word_bits = start + bit_width_ - 64;
+      const long next_word_bits = start + bit_width_ - 64;
       if (next_word_bits > 0)
         val |= absl::little_endian::Load64(byte0 + 8)
                << (bit_width_ - next_word_bits);
@@ -277,11 +277,11 @@ class BitPackedReader {
  private:
   // Implementation of GetBatch(..) for a constant kBitWidth (must be the same
   // as bit_width_). Permits optimized unrolling.
-  template <typename AddValueLambda, int kBitWidth>
+  template <typename AddValueLambda, long kBitWidth>
   void GetBatchImpl(size_t size, const AddValueLambda& add_value)
       __attribute__((always_inline));
 
-  int bit_width_;
+  long bit_width_;
   const char* data_;
 };
 
@@ -445,7 +445,7 @@ inline void BitPackedReader<T>::GetBatch(size_t size,
 }
 
 template <typename T>
-template <typename AddValueLambda, int kBitWidth>
+template <typename AddValueLambda, long kBitWidth>
 inline void BitPackedReader<T>::GetBatchImpl(size_t size,
                                              const AddValueLambda& add_value) {
   static_assert(std::is_same<T, uint32_t>::value, "Unexpected type");

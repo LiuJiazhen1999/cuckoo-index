@@ -155,7 +155,7 @@ TEST(BitmapRank, GetRankRandomBitmap) {
 
 TEST(BitmapRank, GetRankWithRankLookupTable) {
   const size_t num_bits = kRankBlockSize * 2 + kRankBlockSize / 10;
-  std::vector<int> bits;
+  std::vector<long> bits;
   bits.resize(num_bits);
   for (size_t i = 0; i < num_bits; ++i) {
     bits[i] = (i % 2 == 0) ? 1 : 0;
@@ -252,7 +252,7 @@ TEST(EmptyBucketsBitmap, GetEmptyBucketsBitmap) {
 
 TEST(BitmapSerialization, EncodeAndDecodeBitmap) {
   const size_t num_bits = kRankBlockSize * 2 + kRankBlockSize / 10;
-  std::vector<int> bits;
+  std::vector<long> bits;
   bits.resize(num_bits);
   for (size_t i = 0; i < num_bits; ++i) {
     bits[i] = (i % 2 == 0) ? 1 : 0;

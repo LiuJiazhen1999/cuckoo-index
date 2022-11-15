@@ -33,8 +33,8 @@ constexpr size_t kMaxNumRetries = 10;
 
 // **** Helper methods ****
 
-std::vector<int> CreateValues(const size_t num_values) {
-  std::vector<int> values(num_values);
+std::vector<long> CreateValues(const size_t num_values) {
+  std::vector<long> values(num_values);
   for (size_t i = 0; i < num_values; ++i) values[i] = i;
   return values;
 }
@@ -43,10 +43,10 @@ std::vector<int> CreateValues(const size_t num_values) {
 // `in_primary_ratio` according to the ratio of items residing in primary
 // buckets.
 bool LookupValuesInBuckets(const std::vector<Bucket>& buckets,
-                           const std::vector<int>& values,
+                           const std::vector<long>& values,
                            double* in_primary_ratio) {
   size_t num_in_primary = 0;
-  for (const int value : values) {
+  for (const long value : values) {
     CuckooValue cuckoo_value(value, buckets.size());
     bool in_primary_flag;
     if (!LookupValueInBuckets(buckets, cuckoo_value, &in_primary_flag))
@@ -62,7 +62,7 @@ bool LookupValuesInBuckets(const std::vector<Bucket>& buckets,
 // Starts with the minimum number of buckets required for `kSlotsPerBucket`
 // slots and `values.size()`. If construction fails, increases the number of
 // buckets and retries (one additional bucket at a time).
-std::vector<Bucket> DistributeValuesByKicking(const std::vector<int>& values,
+std::vector<Bucket> DistributeValuesByKicking(const std::vector<long>& values,
                                               const bool skew_kicking) {
   size_t num_buckets = GetMinNumBuckets(kNumValues, kSlotsPerBucket);
 
@@ -70,7 +70,7 @@ std::vector<Bucket> DistributeValuesByKicking(const std::vector<int>& values,
     std::vector<Bucket> buckets(num_buckets, Bucket(kSlotsPerBucket));
     std::vector<CuckooValue> cuckoo_values;
     cuckoo_values.reserve(values.size());
-    for (const int value : values)
+    for (const long value : values)
       cuckoo_values.push_back(CuckooValue(value, num_buckets));
     CuckooKicker kicker(kSlotsPerBucket, absl::MakeSpan(buckets), skew_kicking);
     if (kicker.InsertValues(cuckoo_values)) return buckets;
@@ -82,7 +82,7 @@ std::vector<Bucket> DistributeValuesByKicking(const std::vector<int>& values,
 }
 
 TEST(CuckooKickerTest, InsertValues) {
-  const std::vector<int> values = CreateValues(kNumValues);
+  const std::vector<long> values = CreateValues(kNumValues);
 
   // Distribute values by kicking.
   const std::vector<Bucket> buckets =
@@ -95,7 +95,7 @@ TEST(CuckooKickerTest, InsertValues) {
 }
 
 TEST(CuckooKickerTest, InsertValuesWithSkewedKicking) {
-  const std::vector<int> values = CreateValues(kNumValues);
+  const std::vector<long> values = CreateValues(kNumValues);
 
   // Distribute values by kicking.
   const std::vector<Bucket> buckets =
@@ -108,7 +108,7 @@ TEST(CuckooKickerTest, InsertValuesWithSkewedKicking) {
 }
 
 TEST(CuckooKickerTest, CheckForDeterministicBehavior) {
-  const std::vector<int> values = CreateValues(kNumValues);
+  const std::vector<long> values = CreateValues(kNumValues);
 
   // Distribute values twice using skewed kicker.
   const std::vector<Bucket> buckets =

@@ -35,13 +35,13 @@ class IndexStructure {
   virtual ~IndexStructure() {}
 
   // Returns true if the stripe with `stripe_id` contains the given `value`.
-  virtual bool StripeContains(size_t stripe_id, int value) const = 0;
+  virtual bool StripeContains(size_t stripe_id, long value) const = 0;
 
   // Returns a bitmap indicating possibly qualifying stripes for the given
   // `value`. Probes up to `num_stripes` stripes.
   // Note: classes extending IndexStructure can override this method when they
   // can provide an optimized approach here (see CuckooIndex for an example).
-  virtual Bitmap64 GetQualifyingStripes(int value, size_t num_stripes) const {
+  virtual Bitmap64 GetQualifyingStripes(long value, size_t num_stripes) const {
     // Default implementation for per-stripe index structures.
     Bitmap64 result(/*size=*/num_stripes);
     for (size_t stripe_id = 0; stripe_id < static_cast<size_t>(num_stripes);

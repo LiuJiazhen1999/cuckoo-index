@@ -106,7 +106,7 @@ TestCase Evaluator::DoPositiveUniformLookups(const Column& column,
   std::size_t num_false_positive_stripes = 0;
   std::size_t num_true_negative_stripes = 0;
   // Remove NULLs from the possible lookup values.
-  std::vector<int> column_data = column.data();
+  std::vector<long> column_data = column.data();
   column_data.erase(std::remove(column_data.begin(), column_data.end(),
                                 Column::kIntNullSentinel),
                     column_data.end());
@@ -115,7 +115,7 @@ TestCase Evaluator::DoPositiveUniformLookups(const Column& column,
       0, column_data.size() - 1);
   for (size_t i = 0; i < num_lookups; ++i) {
     // Draw value from random row offset.
-    const int value = column_data[row_offset_d(gen)];
+    const long value = column_data[row_offset_d(gen)];
     ProbeAllStripes(column, index, value, num_rows_per_stripe, num_stripes,
                     &num_true_negative_stripes, &num_false_positive_stripes);
   }
@@ -137,7 +137,7 @@ TestCase Evaluator::DoPositiveDistinctLookups(const Column& column,
   const std::size_t num_stripes = column.num_rows() / num_rows_per_stripe;
   std::size_t num_false_positive_stripes = 0;
   std::size_t num_true_negative_stripes = 0;
-  std::vector<int> distinct_values = column.distinct_values();
+  std::vector<long> distinct_values = column.distinct_values();
   // Remove NULLs from the lookup.
   distinct_values.erase(
       std::remove(distinct_values.begin(), distinct_values.end(),
@@ -147,7 +147,7 @@ TestCase Evaluator::DoPositiveDistinctLookups(const Column& column,
       0, distinct_values.size() - 1);
   for (size_t i = 0; i < num_lookups; ++i) {
     // Draw value from random offset.
-    const int value = distinct_values[distinct_values_offset_d(gen)];
+    const long value = distinct_values[distinct_values_offset_d(gen)];
     ProbeAllStripes(column, index, value, num_rows_per_stripe, num_stripes,
                     &num_true_negative_stripes, &num_false_positive_stripes);
   }
@@ -169,7 +169,7 @@ TestCase Evaluator::DoPositiveZipfLookups(const Column& column,
   const std::size_t num_stripes = column.num_rows() / num_rows_per_stripe;
   std::size_t num_false_positive_stripes = 0;
   std::size_t num_true_negative_stripes = 0;
-  std::vector<int> distinct_values = column.distinct_values();
+  std::vector<long> distinct_values = column.distinct_values();
   // Remove NULLs from the lookup.
   distinct_values.erase(
       std::remove(distinct_values.begin(), distinct_values.end(),
@@ -182,7 +182,7 @@ TestCase Evaluator::DoPositiveZipfLookups(const Column& column,
     // implementations (e.g., numpy.random.zipf).
     const size_t offset =
         absl::Zipf(gen, distinct_values.size() - 1, /*q=*/2.0);
-    const int value = distinct_values[offset];
+    const long value = distinct_values[offset];
     ProbeAllStripes(column, index, value, num_rows_per_stripe, num_stripes,
                     &num_true_negative_stripes, &num_false_positive_stripes);
   }
@@ -204,11 +204,11 @@ TestCase Evaluator::DoNegativeLookups(const Column& column,
   const std::size_t num_stripes = column.num_rows() / num_rows_per_stripe;
   std::size_t num_false_positive_stripes = 0;
   std::size_t num_true_negative_stripes = 0;
-  std::uniform_int_distribution<int> value_d(std::numeric_limits<int>::min(),
-                                             std::numeric_limits<int>::max());
+  std::uniform_int_distribution<long> value_d(std::numeric_limits<long>::min(),
+                                             std::numeric_limits<long>::max());
   for (size_t i = 0; i < num_lookups; ++i) {
     // Draw random value that is not present in the column.
-    int value = value_d(gen);
+    long value = value_d(gen);
     while (column.Contains(value)) {
       value = value_d(gen);
     }
@@ -234,7 +234,7 @@ TestCase Evaluator::DoMixedLookups(const Column& column,
   const std::size_t num_stripes = column.num_rows() / num_rows_per_stripe;
   std::size_t num_false_positive_stripes = 0;
   std::size_t num_true_negative_stripes = 0;
-  std::vector<int> distinct_values = column.distinct_values();
+  std::vector<long> distinct_values = column.distinct_values();
   // Remove NULLs from the lookup.
   distinct_values.erase(
       std::remove(distinct_values.begin(), distinct_values.end(),
@@ -242,10 +242,10 @@ TestCase Evaluator::DoMixedLookups(const Column& column,
       distinct_values.end());
   std::uniform_int_distribution<std::size_t> distinct_values_offset_d(
       0, distinct_values.size() - 1);
-  std::uniform_int_distribution<int> value_d(std::numeric_limits<int>::min(),
-                                             std::numeric_limits<int>::max());
+  std::uniform_int_distribution<long> value_d(std::numeric_limits<long>::min(),
+                                             std::numeric_limits<long>::max());
   for (size_t i = 0; i < num_lookups; ++i) {
-    int value;
+    long value;
     // Positive or negative lookup?
     if (absl::Bernoulli(bitgen, hit_rate)) {
       // Positive case.
@@ -272,7 +272,7 @@ TestCase Evaluator::DoMixedLookups(const Column& column,
 }
 
 void Evaluator::ProbeAllStripes(const Column& column,
-                                const IndexStructure& index, int value,
+                                const IndexStructure& index, long value,
                                 std::size_t num_rows_per_stripe,
                                 std::size_t num_stripes,
                                 std::size_t* num_true_negative_stripes,

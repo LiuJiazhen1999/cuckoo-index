@@ -35,7 +35,7 @@ namespace ci {
 // Creates one Xor8 filter per stripe.
 class PerStripeXor : public IndexStructure {
  public:
-  PerStripeXor(const std::vector<int>& data, std::size_t num_rows_per_stripe) {
+  PerStripeXor(const std::vector<long>& data, std::size_t num_rows_per_stripe) {
     num_stripes_ = data.size() / num_rows_per_stripe;
     filters_.reserve(num_stripes_);
     for (size_t stripe_id = 0; stripe_id < num_stripes_; ++stripe_id) {
@@ -53,7 +53,7 @@ class PerStripeXor : public IndexStructure {
     }
   }
 
-  bool StripeContains(std::size_t stripe_id, int value) const override {
+  bool StripeContains(std::size_t stripe_id, long value) const override {
     if (stripe_id >= num_stripes_) {
       std::cerr << "`stripe_id` is out of bounds." << std::endl;
       exit(EXIT_FAILURE);
